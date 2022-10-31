@@ -1,5 +1,8 @@
 (ns mybank-web-api.database
-  (:require [com.stuartsierra.component :as component]))
+  (:require [com.stuartsierra.component :as component]
+            [datomic.client.api :as d]
+            [datomic.dev-local]
+            [clj-http.client :as client]))
 
 "Nossa aplicação até o momento inicia nosso banco de dados em um simples atomo com
  um map clojure"
@@ -22,11 +25,13 @@ No meu exemplo pra cada conta tem um mapa com a chave :saldo e o valor"
   component/Lifecycle
 
   (start [this]
-    (let [_ (println config)
-          arquivo (-> (-> config :config :db-file )
-                      slurp
-                      read-string)]
-      (assoc this :contas (atom arquivo))))
+    (let [config (-> config :config)
+          _ (println config)
+          client (d/client (select-keys config [:system :server-type]))
+          _ (d/create-database client (select-keys config [:db-name]))
+          conn (d/connect client (select-keys config [:db-name]))]
+      (println "agora vai")
+      (assoc this :conn conn)))
 
 
   (stop [this]
