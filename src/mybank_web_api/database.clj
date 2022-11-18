@@ -25,12 +25,10 @@ No meu exemplo pra cada conta tem um mapa com a chave :saldo e o valor"
   component/Lifecycle
 
   (start [this]
-    (let [config (-> config :config)
-          _ (println config)
+    (let [config (-> config :config) 
           client (d/client (select-keys config [:system :server-type]))
           _ (d/create-database client (select-keys config [:db-name]))
-          conn (d/connect client (select-keys config [:db-name]))]
-      (println "agora vai")
+          conn (d/connect client (select-keys config [:db-name]))] 
       (assoc this :conn conn)))
 
 

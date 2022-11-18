@@ -1,8 +1,9 @@
 (ns mybank-web-api.bank
   (:require
-    [com.stuartsierra.component :as component]
-    [schema.core :as s :include-macros true]
-    [mybank-web-api.schema :as schema]))
+   [com.stuartsierra.component :as component]
+   [schema.core :as s :include-macros true]
+   [mybank-web-api.schema :as schema]
+   [datomic.client.api :as d]))
 
 ;; CRIA CONTA
 
@@ -18,7 +19,10 @@
   [context :- schema/Context]
   (let [id-conta (-> context :request :path-params :id keyword)
         contas (-> context :contas)
-        saldo (get-saldo id-conta @contas)]
+        conn (-> context :conn)
+        saldo (get-saldo id-conta @contas)
+        db (d/db conn)]
+    (d/transact conn {} )
     (assoc context :response {:status  200
                               :headers {"Content-Type" "text/plain"}
                               :body    saldo})))
@@ -29,7 +33,7 @@
 
   (start [this]
     (let [_ (println config)
-          arquivo (-> (-> config :config :db-file )
+          arquivo (-> (-> config :config :db-file)
                       slurp
                       read-string)]
       (assoc this :contas (atom arquivo))))

@@ -1,5 +1,4 @@
 {:port 9876
  :server-type :dev-local
  :system :dev
- :db-name "my-bank"
- :db-file "resources/contas.edn"}
+ :db-name "my-bank"}
