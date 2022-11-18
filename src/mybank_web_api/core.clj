@@ -1,24 +1,26 @@
 (ns mybank-web-api.core
-  (:require [io.pedestal.http :as http]
-            [io.pedestal.http.route :as route]
-            [io.pedestal.test :as test-http]
-            [clojure.pprint :as pp])
+  (:require [com.stuartsierra.component :as component]
+            [com.walmartlabs.system-viz :refer [visualize-system]]
+            [mybank-web-api.database :as db]
+            [mybank-web-api.server :as web-server]
+            [mybank-web-api.config :as config]
+            [mybank-web-api.routing :as routes])
   (:gen-class))
 
-(defonce contas (atom {:1 {:saldo 100}
-                   :2 {:saldo 200}
-                   :3 {:saldo 300}}))
 
-(defn get-saldo [request]
-  (let [id-conta (-> request :path-params :id keyword)]
-    {:status 200 :body {:saldo (id-conta @contas "conta inválida!")}}))
+(def new-sys
+  (component/system-map
+    :config (config/new-config)
+    :routes (routes/new-routes)
+    :database (component/using
+                (db/new-database)
+                [:config])
+    :web-server (component/using
+                  (web-server/new-servidor)
+                  [:database :routes :config])))
 
-(defn make-deposit [request]
-  (let [id-conta (-> request :path-params :id keyword)
-        valor-deposito (-> request :body slurp parse-double)
-        _ (swap! contas (fn [m] (update-in m [id-conta :saldo] #(+ % valor-deposito))))]
-    {:status 200 :body {:id-conta id-conta
-                        :novo-saldo (id-conta @contas)}}))
+(def sys (atom nil))
+(defn main [] (reset! sys (component/start new-sys)))
 
 (def routes
   (route/expand-routes
